@@ -46,6 +46,7 @@ var line = d3.line()
     .y(function(d) { return yScale(d.sugar); });
 
 var select = document.getElementById("selectCountry");
+var selectedCountry;
 
 var countries;
 var yAxis, xAxis;
@@ -81,13 +82,13 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
   function displayCountryData(d) {
 
      //get the selected value from the dropdown
-      var selectedCountry = select.options[select.selectedIndex].value;
+      selectedCountry = select.options[select.selectedIndex].value;
   
       var theCountry = countries.filter( function(d) {
        return d.id === selectedCountry;
       });
 
-      console.log(theCountry);
+      //console.log(theCountry);
 
     xScale.domain(d3.extent(data, function(d) { return d.geo; }));
 
@@ -140,11 +141,41 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
   }
     //end display country data
 
+  //Change the displayed country data
   d3.select("#selectCountry").on("change", function(d){
   console.log("changed");
-      
-      displayCountryData(); 
 
+       selectedCountry = select.options[select.selectedIndex].value;
+      
+      var theCountry = countries.filter( function(d) {
+       return d.id === selectedCountry;
+      });
+
+     // console.log(theCountry);
+
+      yScale.domain([
+      d3.min(theCountry, function(c) { return d3.min(c.values, function(d) { return d.sugar; }); }),
+      d3.max(theCountry, function(c) { return d3.max(c.values, function(d) { return d.sugar; }); })
+        ]);
+
+      var country = g.selectAll(".country")
+          .data(theCountry, key)
+          .enter().append("g")
+          .attr("class", "country");
+          
+
+      country.append("path")
+          .transition()
+          .duration(1000)
+          .attr("class", "line")
+          .attr("d", function(d) { return line(d.values); })
+          .style("stroke", function(d) { return zScale(d.id); });
+
+      //Update Y axis
+            svg.select("axis axis--x")
+                .transition()
+                .duration(1000)
+              .call(yAxis);
     });
 });
 
