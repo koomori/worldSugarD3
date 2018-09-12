@@ -4,7 +4,6 @@
 <head>
   <title> D3 Examples </title>
   <style>
-
   .axis--x path {
     display: none;
   }
@@ -15,27 +14,30 @@
     stroke-width: 3px;
   }
 
-  .grid line {
+  .grid-x line, .grid-y line {
     stroke: lightgray;
     stroke-opacity: 0.5;
     shape-rendering: crispEdges;
   }
 
-  .grid path {
+  .grid-x path, .grid-y path {
     stroke-width: 0;
   }
-  
 
-  </style>
+    </style>
 </head>
 <body>
-  <h2>Sugar Data in Cities</h2>
+  <section>
+  <h2>Amount of Sugar and Sweeteners (g per day) consumed on average per person per day </h2>
+  <p>Data from: https://www.gapminder.org/data/ It is found under Health and Nutrition</p>
+  </section>
+
   <select id="selectCountry"></select>
-  <svg width="600" height="500"></svg>
+  <svg id="singleCountry" width="600" height="500"></svg>
   <script src="//d3js.org/d3.v4.min.js"></script>
   <script>
 
-var svg = d3.select("svg"),
+var svg = d3.select("svg#singleCountry"),
     margin = {top: 20, right: 120, bottom: 30, left: 50},
     width = svg.attr("width") - margin.left - margin.right,
     height = svg.attr("height") - margin.top - margin.bottom,
@@ -47,8 +49,8 @@ var smallMarginRight = margin.right*(1/2);
 
 var parseTime = d3.timeParse("%Y");
 
-var xScale= d3.scaleTime().range([0, width]),
-    yScale = d3.scalePow().exponent(0.3).range([height, 0]),
+var xScale= d3.scaleTime().range([0, width]);
+    yScale = d3.scaleLinear().range([height, 0]),
     zScale = d3.scaleOrdinal(d3.schemeCategory10);
 
 var line = d3.line()
@@ -70,6 +72,10 @@ var yAxis, xAxis;
 // gridlines in x axis function
 function make_x_gridlines() {   
     return d3.axisBottom(xScale).ticks(10);
+}
+
+function make_y_axis() {        
+    return d3.axisLeft(yScale).ticks(9);
 }
 
 d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
@@ -117,17 +123,25 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
     zScale.domain(theCountry.map(function(c) { return c.id; }));
 
     xAxis = d3.axisBottom(xScale);
-
     yAxis = d3.axisLeft(yScale);
 
     // add the X gridlines
     svg.append("g")     
-      .attr("class", "grid")
+      .attr("class", "grid-x")
       .attr("transform", "translate("+ margin.left +"," + (height + margin.bottom) + ")")
       .call(make_x_gridlines()
           .tickSize(-height)
           .tickFormat("")
       );
+
+    // add the Y gridlines
+     svg.append("g")         
+        .attr("class", "grid-y")
+        .attr("transform", "translate("+ margin.left + "," + margin.top + ")")
+        .call(make_y_axis()
+            .tickSize(-width, 0, 0)
+            .tickFormat("")
+    );
   
   //add x axis
     g.append("g")
@@ -135,6 +149,7 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
 
+  //add y axis
     g.append("g")
         .attr("class", "axis axis--y")
         .call(yAxis)
@@ -178,12 +193,12 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
         .text(function(d) { return d.id; });
   }
     //end display country data
+});
 
-  //Change the displayed country data
+ //Change the displayed country data
   d3.select("#selectCountry").on("change", function(d){
-  console.log("changed");
 
-       selectedCountry = select.options[select.selectedIndex].value;
+      selectedCountry = select.options[select.selectedIndex].value;
       
       var theCountry = countries.filter( function(d) {
        return d.id === selectedCountry;
@@ -195,14 +210,22 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
           d3.max(theCountry, function(c) { return d3.max(c.values, function(d) { return d.sugar; }); })
         ]);
 
-      //Update Y axis
+      // Y axis withe the new Scale
       yAxis = d3.axisLeft(yScale);
 
-      
+      //Update the Y axis on the Chart
       svg.select(".axis.axis--y")
           .transition()
           .duration(1000)
         .call(yAxis);
+
+      // add the Y gridlines
+     svg.select(".grid-y")
+        .attr("transform", "translate("+ margin.left + "," + margin.top + ")")
+        .call(make_y_axis()
+            .tickSize(-width, 0, 0)
+            .tickFormat("")
+    );
      
       var country = g.selectAll(".country")
           .data(theCountry, key)
@@ -246,7 +269,6 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
         .style("opacity", 1);
      
     });
-});
 
 function home(d, _, columns) {
   d.geo = parseTime(d.geo);
