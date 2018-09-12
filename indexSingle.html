@@ -182,18 +182,19 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
 
       country.append("text")
         .datum(function(d, i) { return {id: d.id, value: d.values[d.values.length - 1]}; })
-        .transition()
-        .duration(1000)
         .attr("transform", function(d, i) {
-          return "translate(" + xScale(d.value.geo) + "," + yScale(d.value.sugar + (i*3) ) + ")"; })
+          return "translate(" + xScale(d.value.geo) + "," + yScale(d.value.sugar) + ")"; })
         .attr("x", 3)
         .attr("dy", "0.45em")
+        .style("opacity", 0)
         .style("font", "12px sans-serif")
         .style("fill", function(d) {
               return "rgb(0,0,0)";
         })
-        .text(function(d) { return d.id; });
-
+        .text(function(d) { return d.id; })
+        .transition()
+        .duration(800)
+        .style("opacity", 1);
      
     });
 });
