@@ -36,19 +36,20 @@ var svg = d3.select("svg"),
 
 var parseTime = d3.timeParse("%Y");
 
-var x = d3.scaleTime().range([0, width]),
-    y = d3.scalePow().exponent(0.3).range([height, 0]),
-    z = d3.scaleOrdinal(d3.schemeCategory10);
+var xScale= d3.scaleTime().range([0, width]),
+    yScale = d3.scalePow().exponent(0.3).range([height, 0]),
+    zScale = d3.scaleOrdinal(d3.schemeCategory10);
 
 var line = d3.line()
     .curve(d3.curveBasis)
-    .x(function(d) { return x(d.geo); })
-    .y(function(d) { return y(d.sugar); });
+    .x(function(d) { return xScale(d.geo); })
+    .y(function(d) { return yScale(d.sugar); });
 
 var select = document.getElementById("selectCountry");
 
 var countries;
 var allCountries;
+var yAxis, xAxis;
 
   var key = function(d) {
     return d.id;
@@ -86,29 +87,32 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
       });
 
 
-  x.domain(d3.extent(data, function(d) { return d.geo; }));
+  xScale.domain(d3.extent(data, function(d) { return d.geo; }));
 
-  y.domain([
+  yScale.domain([
     d3.min(countries, function(c) { return d3.min(c.values, function(d) { return d.sugar; }); }),
     d3.max(countries, function(c) { return d3.max(c.values, function(d) { return d.sugar; }); })
   ]);
 
-  z.domain(countries.map(function(c) { return c.id; }));
+  zScale.domain(countries.map(function(c) { return c.id; }));
+
+  xAxis = d3.axisBottom(xScale);
+  yAxis = d3.axisLeft(yScale);
 
   g.append("g")
       .attr("class", "axis axis--x")
       .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(x));
+      .call(xAxis);
 
   g.append("g")
       .attr("class", "axis axis--y")
-      .call(d3.axisLeft(y))
+      .call(yAxis)
     .append("text")
       .attr("transform", "rotate(-90)")
-      .attr("y", 6)
+      .attr("y", 60)
       .attr("dy", "0.71em")
       .attr("fill", "#000")
-      .text("sugar, ºF");
+      .text("sugar per person -- g per day");
 
   var country = g.selectAll(".country")
     .data(countries, key)
@@ -118,12 +122,12 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
   country.append("path")
       .attr("class", "line")
       .attr("d", function(d) { return line(d.values); })
-      .style("stroke", function(d) { return z(d.id); });
+      .style("stroke", function(d) { return zScale(d.id); });
 
   country.append("text")
       .datum(function(d, i) { return {id: d.id, value: d.values[d.values.length - 1]}; })
       .attr("transform", function(d, i) {
-        return "translate(" + x(d.value.geo) + "," + y(d.value.sugar + (i*3) ) + ")"; })
+        return "translate(" + xScale(d.value.geo) + "," + yScale(d.value.sugar + (i*3) ) + ")"; })
       .attr("x", 3)
       .attr("dy", "0.45em")
       .style("font", "12px sans-serif")
@@ -150,8 +154,7 @@ d3.select("#selectCountry").on("change", function(d){
   selectedCountry = select.options[select.selectedIndex].value;
   console.log(selectedCountry);
 
-  if( num % 2 == 0) {
-    var country = g.selectAll(".country")
+ var country = g.selectAll(".country")
     .data(countries, key)
     .enter().append("g")
       .attr("class", "country");
@@ -159,12 +162,12 @@ d3.select("#selectCountry").on("change", function(d){
   country.append("path")
       .attr("class", "line")
       .attr("d", function(d) { return line(d.values); })
-      .style("stroke", function(d) { return z(d.id); });
+      .style("stroke", function(d) { return zScale(d.id); });
 
   country.append("text")
       .datum(function(d, i) { return {id: d.id, value: d.values[d.values.length - 1]}; })
       .attr("transform", function(d, i) {
-        return "translate(" + x(d.value.geo) + "," + y(d.value.sugar + (i*3) ) + ")"; })
+        return "translate(" + xScale(d.value.geo) + "," + yScale(d.value.sugar) + ")"; })
       .attr("x", 3)
       .attr("dy", "0.45em")
       .style("font", "12px sans-serif")
@@ -172,19 +175,32 @@ d3.select("#selectCountry").on("change", function(d){
             return "rgb(0,0,0)";
       })
       .text(function(d) { return d.id; });
-   } else { 
 
 
+      oneLine = svg.selectAll(".country")
+      .data(countries.filter( function(d) { return d.id == selectedCountry; }), key);
 
-    newLines = svg.selectAll(".country")
-      .data(countries.filter( function(d) { return d.id == selectedCountry; }), key)
-      .attr("class", "country")
+      oneLine.attr("class", "country")
       .exit().remove();
-      console.log(country);
-      console.log(countries);
-  }
-      
-    num ++;
+     //console.log(country);
+     //console.log(countries);
+      console.log(oneLine);
+  
+
+    yScale.domain([
+      d3.min(oneLine, function(c) { return d3.min(c.values, function(d) { return d.sugar; }); }),
+      d3.max(oneLine, function(c) { return d3.max(c.values, function(d) { return d.sugar; }); })
+    ]);
+
+        /*
+
+    //Update Y axis
+    svg.select(".y.axis")
+          .transition()
+          .duration(1000)
+          .call(yAxis); */
+    
+    
 
 });
 
