@@ -48,6 +48,7 @@ var line = d3.line()
 var select = document.getElementById("selectCountry");
 
 var countries;
+var allCountries;
 
   var key = function(d) {
     return d.id;
@@ -65,8 +66,9 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
         };
       });
 
+      allCountries = countries;
      
-
+    //set up the dropdown with a list of all the countries
       var selectOptions = countries.map(function(country) {
             
             return "<option value='" + country.id + "' >" + country.id + "</option>";
@@ -137,24 +139,52 @@ function home(d, _, columns) {
   return d;
 }
 
+var num = 1;
+
 d3.select("#selectCountry").on("change", function(d){
   console.log("changed");
 
   //get selected country
   //filter data by key
   
-
-  var selectedCountry = select.options[select.selectedIndex].value;
+  selectedCountry = select.options[select.selectedIndex].value;
   console.log(selectedCountry);
 
-    var lines = svg.selectAll(".country")
-      .data(countries.filter( function(d) { return d.id == selectedCountry; }))
+  if( num % 2 == 0) {
+    var country = g.selectAll(".country")
+    .data(countries, key)
+    .enter().append("g")
+      .attr("class", "country");
+
+  country.append("path")
+      .attr("class", "line")
+      .attr("d", function(d) { return line(d.values); })
+      .style("stroke", function(d) { return z(d.id); });
+
+  country.append("text")
+      .datum(function(d, i) { return {id: d.id, value: d.values[d.values.length - 1]}; })
+      .attr("transform", function(d, i) {
+        return "translate(" + x(d.value.geo) + "," + y(d.value.sugar + (i*3) ) + ")"; })
+      .attr("x", 3)
+      .attr("dy", "0.45em")
+      .style("font", "12px sans-serif")
+      .style("fill", function(d) {
+            return "rgb(0,0,0)";
+      })
+      .text(function(d) { return d.id; });
+   } else { 
+
+
+
+    newLines = svg.selectAll(".country")
+      .data(countries.filter( function(d) { return d.id == selectedCountry; }), key)
       .attr("class", "country")
       .exit().remove();
-
-      console.log(lines);
+      console.log(country);
+      console.log(countries);
+  }
       
-
+    num ++;
 
 });
 
