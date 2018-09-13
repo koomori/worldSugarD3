@@ -111,7 +111,6 @@ var changeCountriesInterval;
     return d.id;
   }
 
-
 // gridlines in x axis function
 function make_x_gridlines() {   
     return d3.axisBottom(xScale).ticks(10);
@@ -215,6 +214,7 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
         .attr("d", function(d) { return line(d.values); })
         .style("stroke", function(d) { return zScale(d.id); });
 
+   //format the text for the country taking into account the length of the name
     country.append("text")
         .datum(function(d, i) { return {id: d.id, value: d.values[d.values.length - 1]}; })
         .attr("transform", function(d, i) {
@@ -222,7 +222,6 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
         .attr("x", 3)
         .attr("textLength", 
           function(d) {
-
            return (d.id.length < 11 ? smallMarginRight  : margin.right - countryNamePadding)
           })
         .attr("lengthAdjust", function(d) {
@@ -269,7 +268,7 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
         .call(make_y_axis()
             .tickSize(-width, 0, 0)
             .tickFormat("")
-    );
+      );
      
       var country = g.selectAll(".country")
           .data(theCountry, key)
@@ -326,24 +325,17 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
   clearInterval(changeCountriesInterval);
   changeCountries();
 
-  
     changeCountriesInterval = setInterval( changeCountries, 3000);
-    console.log(typeof changeCountriesInterval);
-
 
   function changeCountries() {
-    console.log(select.selectedIndex);
-    console.log("changing");
     if (select.selectedIndex == numberOfOptions -1) { 
          clearInterval(changeCountriesInterval);
          select.selectedIndex = 0;
          stopButton.style.opacity = .5;
-         console.log(select.selectedIndex);
          
     } else {
       select.selectedIndex = ++indexValue;
     }
-    console.log("beforeEvent");
       select.dispatchEvent(event);
   }
 
@@ -354,7 +346,6 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
   
   
     clearInterval(changeCountriesInterval);
-  
     stopButton.style.opacity = 0.5;
 
 });
