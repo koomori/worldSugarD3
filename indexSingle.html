@@ -52,6 +52,7 @@
   }
 
   #stopAnimation {
+    opacity: .5;
   }
 
     </style>
@@ -319,17 +320,25 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
   var indexValue =  select.selectedIndex;
   var numberOfOptions = select.options.length;
   var event = new Event('change');
+  var stopButton = document.getElementById("stopAnimation");
 
+  stopButton.style.opacity = 1;
+  clearInterval(changeCountriesInterval);
   changeCountries();
-  changeCountriesInterval = setInterval( changeCountries, 3000);
+
+  
+    changeCountriesInterval = setInterval( changeCountries, 3000);
+    console.log(typeof changeCountriesInterval);
 
 
   function changeCountries() {
-    
+    console.log(select.selectedIndex);
+    console.log("changing");
     if (select.selectedIndex == numberOfOptions -1) { 
          clearInterval(changeCountriesInterval);
          select.selectedIndex = 0;
-         stopAnimationButton.style.opacity = 0;
+         stopButton.style.opacity = .5;
+         console.log(select.selectedIndex);
          
     } else {
       select.selectedIndex = ++indexValue;
@@ -341,11 +350,12 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
 });
 
   d3.select("#stopAnimation").on("click", function(d){
+    var stopButton = document.getElementById("stopAnimation");
   
-  if(changeCountriesInterval) {
+  
     clearInterval(changeCountriesInterval);
-  }
-
+  
+    stopButton.style.opacity = 0.5;
 
 });
 
