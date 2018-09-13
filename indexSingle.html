@@ -24,22 +24,61 @@
     stroke-width: 0;
   }
 
+  .chart-controls {
+    width: 575px;
+    padding: 1em;
+    border: 2px solid teal;
+  }
+
+  .chart-controls button {
+    background-color: teal;
+    font-size: 1.2em;
+    color: #FFF;
+    padding: .5em;
+    border: 2px solid darkteal;
+  }
+
+  .chart-select {
+    margin-left: 2px;
+    outline: 2px solid teal;
+    border: none;
+    font-size: 1.2em;
+    margin-bottom: 1em;
+  }
+
+  label {
+    margin-bottom: 1em;
+    display: inline-block;
+  }
+
+  #stopAnimation {
+  }
+
     </style>
 </head>
 <body>
-  <section>
-  <h3>Amount of Sugar and Sweeteners (g per day) consumed on average per person per day </h3>
-  <p><strong>Data from 1961 - 2013</strong>
+  <div class="wrapper">
+  <section class="chart1">
+    <div class="chart1-info"
+    <h3>Amount of Sugar and Sweeteners (g per day) consumed on average per person per day </h3>
+    <p><strong>Data from 1961 - 2013</strong>
     <br>From:  <a href="https://www.gapminder.org/data/">Gapminder.org</a> It is found under Health and Nutrition</p>
+      <div class="chart-controls">
+        <label for="selectlCountry">Select a Country to view the sugar consumption</label>
+        <br>
+        <select class="chart-select" id="selectCountry"></select>
+        <br>
+        <button id="animateCountries">Animate Countries</button>
+        <button id="stopAnimation">Stop Animation</button>
+      </div>
+    <svg id="singleCountry" width="600" height="400"></svg>
   </section>
-
-  <select id="selectCountry"></select>
-  <svg id="singleCountry" width="600" height="500"></svg>
+</div>
   <script src="//d3js.org/d3.v4.min.js"></script>
   <script>
 
 var svg = d3.select("svg#singleCountry"),
-    margin = {top: 20, right: 120, bottom: 30, left: 50},
+    margin = {top: 20, right: 120, bottom: 30, left: 60},
     width = svg.attr("width") - margin.left - margin.right,
     height = svg.attr("height") - margin.top - margin.bottom,
     g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -64,6 +103,8 @@ var selectedCountry;
 
 var countries;
 var yAxis, xAxis;
+
+var changeCountriesInterval;
 
   var key = function(d) {
     return d.id;
@@ -156,9 +197,10 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
         .call(yAxis)
       .append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", 60)
-        .attr("dy", "0.71em")
+        .attr("y", -60)
+        .attr("dy", "1em")
         .attr("fill", "#000")
+        .style("font", "14px arial")
         .text("sugar per person -- g per day");
 
     var country = g.selectAll(".country")
@@ -238,11 +280,13 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
           .attr("class", "country");
           
       country.append("path")
-          .transition()
-          .duration(1000)
           .attr("class", "line")
           .attr("d", function(d) { return line(d.values); })
-          .style("stroke", function(d) { return zScale(d.id); });
+          .style("stroke", function(d) { return zScale(d.id); })
+          .style("opacity", 0)
+          .transition()
+          .duration(1000)
+          .style("opacity", 1);
 
       country.append("text")
         .datum(function(d, i) { return {id: d.id, value: d.values[d.values.length - 1]}; })
@@ -270,6 +314,41 @@ d3.csv("sugar_per_person_g_per_day.csv", home, function(error, data) {
         .style("opacity", 1);
      
     });
+
+ d3.select("#animateCountries").on("click", function(d){
+  var indexValue =  select.selectedIndex;
+  var numberOfOptions = select.options.length;
+  var event = new Event('change');
+
+  changeCountries();
+  changeCountriesInterval = setInterval( changeCountries, 3000);
+
+
+  function changeCountries() {
+    
+    if (select.selectedIndex == numberOfOptions -1) { 
+         clearInterval(changeCountriesInterval);
+         select.selectedIndex = 0;
+         stopAnimationButton.style.opacity = 0;
+         
+    } else {
+      select.selectedIndex = ++indexValue;
+    }
+    console.log("beforeEvent");
+      select.dispatchEvent(event);
+  }
+
+});
+
+  d3.select("#stopAnimation").on("click", function(d){
+  
+  if(changeCountriesInterval) {
+    clearInterval(changeCountriesInterval);
+  }
+
+
+});
+
 
 function home(d, _, columns) {
   d.geo = parseTime(d.geo);
